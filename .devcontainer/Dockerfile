@@ -5,6 +5,7 @@ ENV TZ="$TZ"
 
 ARG CLAUDE_CODE_VERSION=latest
 ARG CODEX_VERSION=latest
+ARG QWEN_CODE_VERSION=latest
 
 # Install basic development tools and iptables/ipset
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -45,8 +46,8 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhisto
 ENV DEVCONTAINER=true
 
 # Create workspace and config directories and set permissions
-RUN mkdir -p /workspace /home/node/.claude /home/node/.codex && \
-  chown -R node:node /workspace /home/node/.claude /home/node/.codex
+RUN mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.qwen && \
+  chown -R node:node /workspace /home/node/.claude /home/node/.codex /home/node/.qwen
 
 WORKDIR /workspace
 
@@ -85,6 +86,9 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 # Install Codex
 RUN npm install -g @openai/codex@${CODEX_VERSION}
+
+# Install Qwen Code
+RUN npm install -g @qwen-code/qwen-code@${QWEN_CODE_VERSION}
 
 
 # Copy and set up firewall script
