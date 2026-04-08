@@ -9,6 +9,7 @@ ARG CODEX_VERSION=latest
 # Install basic development tools and iptables/ipset
 RUN apt-get update && apt-get install -y --no-install-recommends \
   less \
+  bubblewrap \
   git \
   procps \
   sudo \
