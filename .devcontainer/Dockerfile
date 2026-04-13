@@ -2,6 +2,8 @@ FROM node:20
 
 ARG TZ
 ENV TZ="$TZ"
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 ARG CLAUDE_CODE_VERSION=latest
 ARG CODEX_VERSION=latest
@@ -52,6 +54,7 @@ RUN mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.qwen /h
 
 WORKDIR /workspace
 
+ARG NVM_VERSION=0.40.2
 ARG GIT_DELTA_VERSION=0.18.2
 RUN ARCH=$(dpkg --print-architecture) && \
   wget "https://github.com/dandavison/delta/releases/download/${GIT_DELTA_VERSION}/git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
@@ -82,14 +85,19 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
   -x
 
+# Install nvm
+ENV NVM_DIR=/home/node/.nvm
+RUN wget -qO- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | PROFILE=/dev/null bash \
+  && printf '\n# nvm\nexport NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"\n' >> /home/node/.zshrc
+
 # Install Claude
-RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
+RUN NPM_CONFIG_PREFIX=/usr/local/share/npm-global npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 # Install Codex
-RUN npm install -g @openai/codex@${CODEX_VERSION}
+RUN NPM_CONFIG_PREFIX=/usr/local/share/npm-global npm install -g @openai/codex@${CODEX_VERSION}
 
 # Install Qwen Code
-RUN npm install -g @qwen-code/qwen-code@${QWEN_CODE_VERSION}
+RUN NPM_CONFIG_PREFIX=/usr/local/share/npm-global npm install -g @qwen-code/qwen-code@${QWEN_CODE_VERSION}
 
 # Install uv (as root so it can write to /usr/local/bin)
 USER root
