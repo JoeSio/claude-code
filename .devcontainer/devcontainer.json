@@ -50,7 +50,8 @@
     "source=codex-config-${devcontainerId},target=/home/node/.codex,type=volume",
     "source=qwen-code-config-${devcontainerId},target=/home/node/.qwen,type=volume",
     "source=/home/joe/dev/html-generator,target=/myapp/html-generator,type=bind,consistency=delegated",
-    "source=/home/joe/dev/project/my-llm-wiki,target=/myapp/my-llm-wiki,type=bind,consistency=delegated"
+    "source=/home/joe/dev/project/my-llm-wiki,target=/myapp/my-llm-wiki,type=bind,consistency=delegated",
+    "source=/home/joe/dev/react/bill-tracker,target=/myapp/bill-tracker,type=bind,consistency=delegated"
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
