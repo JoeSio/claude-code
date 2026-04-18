@@ -7,12 +7,12 @@
       "CLAUDE_CODE_VERSION": "latest",
       "CODEX_VERSION": "latest",
       "QWEN_CODE_VERSION": "latest",
+      "KIMI_CLI_VERSION": "latest",
       "GIT_DELTA_VERSION": "0.18.2",
       "ZSH_IN_DOCKER_VERSION": "1.2.0"
     }
   },
   "runArgs": [
-    "--network=container:myvpn",
     "--cap-add=NET_ADMIN",
     "--cap-add=NET_RAW"
   ],
@@ -49,14 +49,14 @@
     "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume",
     "source=codex-config-${devcontainerId},target=/home/node/.codex,type=volume",
     "source=qwen-code-config-${devcontainerId},target=/home/node/.qwen,type=volume",
-    "source=/home/joe/dev/html-generator,target=/myapp/html-generator,type=bind,consistency=delegated",
-    "source=/home/joe/dev/project/my-llm-wiki,target=/myapp/my-llm-wiki,type=bind,consistency=delegated",
-    "source=/home/joe/dev/react/bill-tracker,target=/myapp/bill-tracker,type=bind,consistency=delegated"
+    "source=kimi-config-${devcontainerId},target=/home/node/.kimi,type=volume",
+    "source=/Users/joesio/dev/react/my-gmock,target=/myapp/my-gmock,type=bind,consistency=delegated"
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "CODEX_HOME": "/home/node/.codex",
+    "KIMI_SHARE_DIR": "/home/node/.kimi",
     "POWERLEVEL9K_DISABLE_GITSTATUS": "true"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",

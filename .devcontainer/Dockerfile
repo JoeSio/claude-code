@@ -6,6 +6,7 @@ ENV TZ="$TZ"
 ARG CLAUDE_CODE_VERSION=latest
 ARG CODEX_VERSION=latest
 ARG QWEN_CODE_VERSION=latest
+ARG KIMI_CLI_VERSION=latest
 
 # Install basic development tools and iptables/ipset
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -46,8 +47,8 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhisto
 ENV DEVCONTAINER=true
 
 # Create workspace and config directories and set permissions
-RUN mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.qwen && \
-  chown -R node:node /workspace /home/node/.claude /home/node/.codex /home/node/.qwen
+RUN mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.qwen /home/node/.kimi && \
+  chown -R node:node /workspace /home/node/.claude /home/node/.codex /home/node/.qwen /home/node/.kimi
 
 WORKDIR /workspace
 
@@ -62,7 +63,7 @@ USER node
 
 # Install global packages
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
-ENV PATH=$PATH:/usr/local/share/npm-global/bin
+ENV PATH=$PATH:/usr/local/share/npm-global/bin:/home/node/.local/bin
 
 # Set the default shell to zsh rather than sh
 ENV SHELL=/bin/zsh
@@ -90,6 +91,13 @@ RUN npm install -g @openai/codex@${CODEX_VERSION}
 # Install Qwen Code
 RUN npm install -g @qwen-code/qwen-code@${QWEN_CODE_VERSION}
 
+# Install uv (as root so it can write to /usr/local/bin)
+USER root
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
+USER node
+
+# Install Kimi CLI
+RUN uv tool install kimi-cli@${KIMI_CLI_VERSION}
 
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/
