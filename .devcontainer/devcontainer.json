@@ -3,7 +3,7 @@
   "build": {
     "dockerfile": "Dockerfile",
     "args": {
-      "TZ": "${localEnv:TZ:America/Los_Angeles}",
+      "TZ": "${localEnv:TZ:Asia/Shanghai}",
       "CLAUDE_CODE_VERSION": "latest",
       "CODEX_VERSION": "latest",
       "QWEN_CODE_VERSION": "latest",
@@ -14,7 +14,9 @@
   },
   "runArgs": [
     "--cap-add=NET_ADMIN",
-    "--cap-add=NET_RAW"
+    "--cap-add=NET_RAW",
+    "--network",
+    "container:myvpn"
   ],
   "customizations": {
     "vscode": {
