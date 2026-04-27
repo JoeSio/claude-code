@@ -51,8 +51,8 @@
     "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume",
     "source=codex-config-${devcontainerId},target=/home/node/.codex,type=volume",
     "source=qwen-code-config-${devcontainerId},target=/home/node/.qwen,type=volume",
-    "source=kimi-config-${devcontainerId},target=/home/node/.kimi,type=volume",
-    "source=/Users/joesio/dev/react/my-gmock,target=/myapp/my-gmock,type=bind,consistency=delegated"
+    "source=source-files-${devcontainerId},target=/myapp,type=volume",
+    "source=kimi-config-${devcontainerId},target=/home/node/.kimi,type=volume"
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
@@ -63,6 +63,7 @@
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
-  "postStartCommand": "echo 'Using Gluetun VPN network (container: elated_ride)'",
+  "postCreateCommand": "sudo chown -R node:node /myapp 2>/dev/null || true",
+  "postStartCommand": "sudo chown -R node:node /myapp 2>/dev/null || true; echo 'Using Gluetun VPN network (container: elated_ride)'",
   "waitFor": "postStartCommand"
 }

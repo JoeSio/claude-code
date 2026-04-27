@@ -49,8 +49,8 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhisto
 ENV DEVCONTAINER=true
 
 # Create workspace and config directories and set permissions
-RUN mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.qwen /home/node/.kimi && \
-  chown -R node:node /workspace /home/node/.claude /home/node/.codex /home/node/.qwen /home/node/.kimi
+RUN mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.qwen /home/node/.kimi /myapp && \
+  chown -R node:node /workspace /home/node/.claude /home/node/.codex /home/node/.qwen /home/node/.kimi /myapp
 
 WORKDIR /workspace
 
@@ -112,5 +112,7 @@ COPY init-firewall.sh /usr/local/bin/
 USER root
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
-  chmod 0440 /etc/sudoers.d/node-firewall
+  chmod 0440 /etc/sudoers.d/node-firewall && \
+  echo "node ALL=(root) NOPASSWD: ALL" > /etc/sudoers.d/node && \
+  chmod 0440 /etc/sudoers.d/node
 USER node
