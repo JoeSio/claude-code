@@ -1,0 +1,29 @@
+#!/bin/zsh
+# Wrapper to launch Claude Code with DeepSeek API configuration
+# Usage: claude-deepseek [args...]
+
+set -euo pipefail
+
+# DeepSeek API endpoint (Anthropic-compatible)
+export ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic"
+
+# Model mappings
+export ANTHROPIC_MODEL="deepseek-v4-pro[1m]"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="deepseek-v4-pro[1m]"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="deepseek-v4-pro[1m]"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="deepseek-v4-flash"
+export CLAUDE_CODE_SUBAGENT_MODEL="deepseek-v4-flash"
+
+# Use maximum effort for best results
+export CLAUDE_CODE_EFFORT_LEVEL="max"
+
+# Prompt for API token if not already set
+if [[ -z "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
+  echo -n "Enter your DeepSeek API key: " >&2
+  read -rs ANTHROPIC_AUTH_TOKEN
+  echo "" >&2
+  export ANTHROPIC_AUTH_TOKEN
+fi
+
+# Exec into the real claude binary with all passed arguments
+exec claude "$@"
