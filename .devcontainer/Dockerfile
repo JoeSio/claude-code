@@ -2,76 +2,72 @@ FROM mcr.microsoft.com/devcontainers/universal:linux
 
 ARG TZ
 ENV TZ="$TZ"
-
 ARG USERNAME=codespace
+
+# 1. System-level tools (Root)
 USER root
-
-# Install project-specific tools not included in the universal image
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  bubblewrap \
-  fzf \
-  iproute2 \
-  dnsutils \
-  libnspr4 \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
+    bubblewrap fzf iproute2 dnsutils libnspr4 ripgrep \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Ensure global npm install directory exists
-RUN mkdir -p /usr/local/share/npm-global && \
-  chown -R $USERNAME:$USERNAME /usr/local/share/npm-global
+# 2. Setup Directories & Permissions (Grouped)
+RUN mkdir -p /usr/local/share/npm-global /commandhistory /workspace /myapp \
+    /home/$USERNAME/.claude /home/$USERNAME/.codex /home/$USERNAME/.qwen /home/$USERNAME/.kimi \
+    && touch /commandhistory/.bash_history \
+    && chown -R $USERNAME:$USERNAME /usr/local/share/npm-global /commandhistory /workspace /myapp \
+    && chown -R $USERNAME:$USERNAME /home/$USERNAME/.claude /home/$USERNAME/.codex /home/$USERNAME/.qwen /home/$USERNAME/.kimi
 
-# Persist bash history
-RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
-  && mkdir /commandhistory \
-  && touch /commandhistory/.bash_history \
-  && chown -R $USERNAME /commandhistory
+# 3. Global Configs
+ENV DEVCONTAINER=true \
+    EDITOR=nano \
+    VISUAL=nano
 
-ENV DEVCONTAINER=true
+# Set PATH to include our custom global bin AND the local bin
+ENV PATH="/usr/local/share/npm-global/bin:/home/$USERNAME/.local/bin:$PATH"
 
-# Create workspace and config directories
-RUN mkdir -p /workspace /home/$USERNAME/.claude /home/$USERNAME/.codex /home/$USERNAME/.qwen /home/$USERNAME/.kimi /myapp && \
-  chown -R $USERNAME:$USERNAME /workspace /home/$USERNAME/.claude /home/$USERNAME/.codex /home/$USERNAME/.qwen /home/$USERNAME/.kimi /myapp
+# Force environment variables into shell profiles for interactive sessions
+RUN echo "export NPM_CONFIG_PREFIX=/usr/local/share/npm-global" >> /home/$USERNAME/.zshrc \
+    && echo "export NPM_CONFIG_PREFIX=/usr/local/share/npm-global" >> /home/$USERNAME/.bashrc \
+    && echo "export PATH=\"/usr/local/share/npm-global/bin:/home/$USERNAME/.local/bin:\$PATH\"" >> /home/$USERNAME/.zshrc \
+    && echo "export PATH=\"/usr/local/share/npm-global/bin:/home/$USERNAME/.local/bin:\$PATH\"" >> /home/$USERNAME/.bashrc
 
+# 4. Versioned binary installs (Git Delta)
+ARG GIT_DELTA_VERSION=0.18.2
+RUN ARCH=$(dpkg --print-architecture) && \
+    wget "https://github.com/dandavison/delta/releases/download/${GIT_DELTA_VERSION}/git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
+    dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
+    rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
+
+# 5. User-level tools
+USER $USERNAME
 WORKDIR /workspace
 
 ARG CLAUDE_CODE_VERSION=latest
 ARG CODEX_VERSION=latest
 ARG QWEN_CODE_VERSION=latest
 ARG KIMI_CLI_VERSION=latest
-ARG GIT_DELTA_VERSION=0.18.2
 
-RUN ARCH=$(dpkg --print-architecture) && \
-  wget "https://github.com/dandavison/delta/releases/download/${GIT_DELTA_VERSION}/git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
-  dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
-  rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
+# Install Node 22 and the AI tools
+# We 'unset' the prefix temporarily so NVM allows us to source it
+RUN bash -c "unset NPM_CONFIG_PREFIX && . /usr/local/share/nvm/nvm.sh && \
+    nvm install 22 && \
+    nvm alias default 22 && \
+    nvm use 22 && \
+    npm install -g --prefix /usr/local/share/npm-global \
+    @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
+    @openai/codex@${CODEX_VERSION} \
+    @qwen-code/qwen-code@${QWEN_CODE_VERSION}"
 
-USER $USERNAME
-
-# Add custom global npm path to PATH
-ENV PATH=$PATH:/usr/local/share/npm-global/bin:/home/$USERNAME/.local/bin
-
-# Default editor
-ENV EDITOR=nano
-ENV VISUAL=nano
-
-# Install global npm packages
-RUN NPM_CONFIG_PREFIX=/usr/local/share/npm-global npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
-RUN NPM_CONFIG_PREFIX=/usr/local/share/npm-global npm install -g @openai/codex@${CODEX_VERSION}
-RUN NPM_CONFIG_PREFIX=/usr/local/share/npm-global npm install -g @qwen-code/qwen-code@${QWEN_CODE_VERSION}
-RUN NPM_CONFIG_PREFIX=/usr/local/share/npm-global npm install -g @playwright/cli@latest
-RUN playwright install
-
-# Install uv (as root so it can write to /usr/local/bin)
+# UV and Kimi CLI
 USER root
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
-USER $USERNAME
 
-# Install Kimi CLI
+USER $USERNAME
 RUN uv tool install kimi-cli@${KIMI_CLI_VERSION}
 
-# Copy custom global scripts
-COPY --chown=root:root scripts/* /usr/local/bin/
-
-# Ensure custom scripts are executable
+# 6. Final Script Setup
 USER root
+COPY --chown=root:root scripts/* /usr/local/bin/
 RUN chmod +x /usr/local/bin/*
+
 USER $USERNAME
