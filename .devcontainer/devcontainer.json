@@ -48,7 +48,8 @@
     "source=claude-code-config-${devcontainerId},target=/home/codespace/.claude,type=volume",
     "source=codex-config-${devcontainerId},target=/home/codespace/.codex,type=volume",
     "source=qwen-code-config-${devcontainerId},target=/home/codespace/.qwen,type=volume",
-    "source=kimi-config-${devcontainerId},target=/home/codespace/.kimi,type=volume"
+    "source=kimi-config-${devcontainerId},target=/home/codespace/.kimi,type=volume",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
@@ -60,6 +61,6 @@
   "workspaceMount": "source=claude-code-workspace,target=/myapp,type=volume",
   "workspaceFolder": "/myapp",
   "postCreateCommand": "sudo chown -R codespace:codespace /myapp 2>/dev/null || true",
-  "postStartCommand": "sudo chown -R codespace:codespace /myapp 2>/dev/null || true; echo 'Using Gluetun VPN network (container: myvpn)'",
+  "postStartCommand": "sudo chown -R codespace:codespace /myapp 2>/dev/null || true; if [ -S /var/run/docker.sock ]; then sudo chmod 666 /var/run/docker.sock; fi || true; echo 'Using Gluetun VPN network (container: myvpn)'",
   "waitFor": "postStartCommand"
 }
